@@ -39,11 +39,9 @@
 			"url":"https://github.com/Sirox228/linc_luajit.git"
 		},
 		{
-			"name":"hxCodec",
-			"type":"git",
-			"dir":"hxCodec",
-			"ref":"main",
-			"url":"https://github.com/JonnycatMeow/hxCodec-old.git"
+			"name": "hxCodec",
+            "type": "haxelib",
+            "version": "2.5.1"
 		},
 		{
 			"name":"hxShaders",
