@@ -1,156 +1,163 @@
-# This is a basic workflow to help you get started with Actions
-
-name: Build
-
-# Controls when the action will run.
-on: [push, workflow_dispatch]
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+name: Main
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 jobs:
-  # This workflow contains a single job called "build"
-  releaseBuild:
-    runs-on: ubuntu-latest
+  iOS:
+    runs-on: macos-13
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          persist-credentials: false
 
+      - name: Configure git
+        run: |
+          git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+          git config --global user.name "prohack101010"
+          git config --global user.email "gerek832626@gmail.com"
+        env:
+          TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
+        with:
+          haxe-version: 4.2.4
+
+      - name: Install Libraries
+        run: |
+          haxelib install hmm --quiet
+          haxelib run hmm install --quiet
+
+      - name: Compile
+        run: haxelib run lime build ios -nosign -arm64
+
+      - name: Make Ipa
+        run: |
+          cd export/release/ios/build/*-iphoneos
+          mkdir Payload
+          mv *.app Payload
+          zip -r PsychEngine.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: iOSBuild
+          path: export/release/ios/build/Release-iphoneos/*.ipa
+          if-no-files-found: error
+  build32:
+    name: build32
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@main
 
       - name: Setup Android NDK
-        uses: nttld/setup-ndk@main
         id: setup-ndk
+        uses: nttld/setup-ndk@main
         with:
           ndk-version: r21e
 
       - name: Setup Java JDK
         uses: actions/setup-java@main
         with:
-          distribution: 'zulu'
-          java-version: '18'
+          distribution: 'temurin'
+          java-version: 11
 
       - name: Setup Haxe
         uses: krdlab/setup-haxe@v1.2.0
         with:
-          haxe-version: 4.2.5
+          haxe-version: 4.2.0
 
-      - name: Restore Cache
-        uses: actions/cache@main
-        with:
-          # not caching the bin folder to prevent asset duplication and stuff like that
-          key: cache-build-android-release
-          path: |
-            .haxelib/
-            export/release/android/haxe/
-            export/release/android/obj/
-          restore-keys: |
-            cache-build-android-release
-
-      - name: Installing Libraries
+      - name: Install Haxelib
         run: |
           haxelib setup ~/haxelib
-          haxelib --quiet install hxcpp > /dev/null
-          haxe -cp ./actions -D analyzer-optimize -main Main --interp
+          haxelib install hmm --quiet
+          haxelib run hmm install --quiet
+      - name: Create Version Tag
+        run: echo "${{github.run_id}}" > VERSION
 
-      - name: Configure Android
+      - name: Setup Lime
         run: |
           haxelib run lime setup -alias -y
           haxelib run lime config ANDROID_SDK $ANDROID_HOME
           haxelib run lime config ANDROID_NDK_ROOT $ANDROID_NDK_HOME
           haxelib run lime config JAVA_HOME $JAVA_HOME
           haxelib run lime config ANDROID_SETUP true
+          haxelib set lime 7.9.0
+          haxelib set openfl 9.1.0
+          haxelib set flixel 4.11.0
+          haxelib set flixel-addons 2.11.0
+          haxelib set hxcpp 4.2.1
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
-      - name: Building
-        run: haxelib run lime build android --app-version="4.0.0-${{ github.run_id}}"
+      - name: Compile
+        run: haxelib run lime build android -D NO_PRECOMPILED_HEADERS -armv7 -final
 
       - name: Upload Artifact
         uses: actions/upload-artifact@main
         with:
-          name: androidBuild
-          path: export/release/android/bin/app/build/outputs/apk/debug
-          if-no-files-found: error
-
-      - name: Uploading Cache
-        uses: actions/cache@main
-        with:
-          # caching again since for some reason it doesnt work with the first post cache shit
-          key: cache-build-android-release
-          path: |
-            .haxelib/
-            export/release/android/haxe/
-            export/release/android/obj/
-          restore-keys: |
-            cache-build-android-release
-  debugBuild:
+          name: Build32
+          path: export/release/android/bin/app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+  build64:
+    name: build64
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@main
 
       - name: Setup Android NDK
-        uses: nttld/setup-ndk@main
         id: setup-ndk
+        uses: nttld/setup-ndk@main
         with:
           ndk-version: r21e
 
       - name: Setup Java JDK
         uses: actions/setup-java@main
         with:
-          distribution: 'zulu'
-          java-version: '18'
+          distribution: 'temurin'
+          java-version: 11
 
       - name: Setup Haxe
         uses: krdlab/setup-haxe@v1.2.0
         with:
-          haxe-version: 4.2.5
+          haxe-version: 4.2.0
 
-      - name: Restore Cache
-        uses: actions/cache@main
-        with:
-          # not caching the bin folder to prevent asset duplication and stuff like that
-          key: cache-build-android-debug
-          path: |
-            .haxelib/
-            export/debug/android/haxe/
-            export/debug/android/obj/
-          restore-keys: |
-            cache-build-android-debug
-
-      - name: Installing Libraries
+      - name: Install Haxelib
         run: |
           haxelib setup ~/haxelib
-          haxelib --quiet install hxcpp > /dev/null
-          haxe -cp ./actions -D analyzer-optimize -main Main --interp
+          haxelib install hmm --quiet
+          haxelib run hmm install --quiet
+      - name: Create Version Tag
+        run: echo "${{github.run_id}}" > VERSION
 
-      - name: Configure Android
+      - name: Setup Lime
         run: |
           haxelib run lime setup -alias -y
           haxelib run lime config ANDROID_SDK $ANDROID_HOME
           haxelib run lime config ANDROID_NDK_ROOT $ANDROID_NDK_HOME
           haxelib run lime config JAVA_HOME $JAVA_HOME
           haxelib run lime config ANDROID_SETUP true
+          haxelib set lime 7.9.0
+          haxelib set openfl 9.1.0
+          haxelib set flixel 4.11.0
+          haxelib set flixel-addons 2.11.0
+          haxelib set hxcpp 4.2.1
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
-      - name: Building
-        run: haxelib run lime build android -debug --app-version="4.0.0-${{ github.run_id}}"
+      - name: Compile
+        run: haxelib run lime build android -D NO_PRECOMPILED_HEADERS -arm64 -final
 
       - name: Upload Artifact
         uses: actions/upload-artifact@main
         with:
-          name: androidBuild-DEBUG
-          path: export/debug/android/bin/app/build/outputs/apk/debug
-          if-no-files-found: error
-
-      - name: Uploading Cache
-        uses: actions/cache@main
-        with:
-          # caching again since for some reason it doesnt work with the first post cache shit
-          key: cache-build-android-debug
-          path: |
-            .haxelib/
-            export/debug/android/haxe/
-            export/debug/android/obj/
-          restore-keys: |
-            cache-build-android-debug
+          name: Build64
+          path: export/release/android/bin/app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+          
