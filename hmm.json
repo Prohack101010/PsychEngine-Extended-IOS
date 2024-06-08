@@ -17,6 +17,12 @@
 			"version":"4.11.0"
 		},
 		{
+            "name":"hxcpp",
+            "type": "git",
+            "ref": "main",
+            "url": "https://github.com/PsychPorting/hxcpp-0.6.3.git"
+        },
+		{
 			"name":"hscript",
 			"type":"haxelib",
 			"version":null
@@ -32,12 +38,11 @@
 			"version":null
 		},
 		{
-			"name":"linc_luajit",
-			"type":"git",
-			"dir":"linc_luajit",
-			"ref":"master",
-			"url":"https://github.com/Sirox228/linc_luajit.git"
-		},
+            "name":"linc_luajit",
+            "type":"git",
+            "ref":"main",
+            "url":"https://github.com/PsychPorting/linc_luajit-0.6.3.git"
+        },
 		{
 			"name": "hxCodec",
             "type": "haxelib",
