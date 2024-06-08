@@ -1174,7 +1174,15 @@ class PlayState extends MusicBeatState
 
 		#if mobile
 		addAndroidControls();
-		androidc.visible = false;
+	        if (ClientPrefs.hitboxmode == 'Classic') {
+		MusicBeatState.androidc.visible = false;
+		}
+	        if (ClientPrefs.hitboxmode == 'New') {
+		MusicBeatState.androidc.visible = true;
+		if (!ClientPrefs.hitboxhint) {
+		MusicBeatState.androidc.alpha = 0.000001;
+		}
+		}
 		#end
 
 		startingSong = true;
@@ -2063,14 +2071,19 @@ class PlayState extends MusicBeatState
 			callOnLuas('onStartCountdown', []);
 			return;
 		}
+        #if mobile
+		    MusicBeatState.androidc.visible = true;
+			if (checkHitbox != true) MusicBeatState.androidc.alpha = 1;
+			//
+		#end
 
 		inCutscene = false;
 		var ret:Dynamic = callOnLuas('onStartCountdown', [], false);
 		if(ret != FunkinLua.Function_Stop) {
 			if (skipCountdown || startOnTime > 0) skipArrowStartTween = true;
-			#if mobile
-			androidc.visible = true;
-			#end
+			//#if mobile
+			//androidc.visible = true;
+			//#end
 			generateStaticArrows(0);
 			generateStaticArrows(1);
 			for (i in 0...playerStrums.length) {
@@ -2766,6 +2779,11 @@ class PlayState extends MusicBeatState
 			}
 			paused = false;
 			callOnLuas('onResume', []);
+			
+			#if mobile
+			MusicBeatState.androidc.y = 0;
+			//MusicBeatState.androidc.visible = true;
+			#end
 
 			#if desktop
 			if (startTimer != null && startTimer.finished)
@@ -2997,7 +3015,7 @@ class PlayState extends MusicBeatState
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
-		if (controls.PAUSE #if android || FlxG.android.justReleased.BACK #end && startedCountdown && canPause)
+		if (controls.PAUSE #if mobile || FlxG.android.justReleased.BACK #end && startedCountdown && canPause)
 		{
 			var ret:Dynamic = callOnLuas('onPause', [], false);
 			if(ret != FunkinLua.Function_Stop) {
@@ -3310,6 +3328,10 @@ class PlayState extends MusicBeatState
 			FlxG.sound.music.pause();
 			vocals.pause();
 		}
+		#if mobile
+			MusicBeatState.androidc.y = 720;
+			//MusicBeatState.androidc.visible = true;
+			#end
 		openSubState(new PauseSubState(boyfriend.getScreenPosition().x, boyfriend.getScreenPosition().y));
 		//}
 
@@ -3884,7 +3906,9 @@ class PlayState extends MusicBeatState
 		}
 
 		#if mobile
-		androidc.visible = false;
+		if (ClientPrefs.hitboxmode == 'New' && !ClientPrefs.hitboxhint) {
+		MusicBeatState.androidc.alpha = 0.00001;
+		}
 		#end
 		timeBarBG.visible = false;
 		timeBar.visible = false;

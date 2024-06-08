@@ -35,11 +35,12 @@ class MainMenuState extends MusicBeatState
 	var optionShit:Array<String> = [
 		'story_mode',
 		'freeplay',
-		#if MODS_ALLOWED 'mods', #end
+		//#if MODS_ALLOWED 'mods', #end
 		#if ACHIEVEMENTS_ALLOWED 'awards', #end
-		'credits',
+	        //'credits',
+		//#if !switch 'donate', #end
 		'options'
-	];
+	]
 
 	var magenta:FlxSprite;
 	var camFollow:FlxObject;
@@ -161,7 +162,7 @@ class MainMenuState extends MusicBeatState
 		#end
 
 		#if mobile
-		addVirtualPad(UP_DOWN, A_B_E);
+		addVirtualPad(UP_DOWN, A_B_E_C_M);
 		#end
 
 		super.create();
@@ -208,6 +209,18 @@ class MainMenuState extends MusicBeatState
 				selectedSomethin = true;
 				FlxG.sound.play(Paths.sound('cancelMenu'));
 				MusicBeatState.switchState(new TitleState());
+			}
+			
+			if (_virtualpad.buttonM.justPressed)
+			{
+				selectedSomethin = true;
+				MusicBeatState.switchState(new ModsMenuState());
+			}
+			
+			if (_virtualpad.buttonC.justPressed)
+			{
+				selectedSomethin = true;
+				MusicBeatState.switchState(new CreditsState());
 			}
 
 			if (controls.ACCEPT)

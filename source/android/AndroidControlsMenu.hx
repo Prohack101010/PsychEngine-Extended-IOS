@@ -8,6 +8,7 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.addons.transition.FlxTransitionableState;
 import android.FlxHitbox;
+import android.FlxNewHitbox;
 import android.AndroidControls.Config;
 import android.FlxVirtualPad;
 
@@ -17,6 +18,7 @@ class AndroidControlsMenu extends MusicBeatState
 {
 	var vpad:FlxVirtualPad;
 	var hbox:FlxHitbox;
+	var newhbox:FlxNewHitbox;
 	var upPozition:FlxText;
 	var downPozition:FlxText;
 	var leftPozition:FlxText;
@@ -24,12 +26,11 @@ class AndroidControlsMenu extends MusicBeatState
 	var inputvari:PsychAlphabet;
 	var leftArrow:FlxSprite;
 	var rightArrow:FlxSprite;
-	var controlitems:Array<String> = ['Hitbox','Pad-Left','Pad-Custom','Duo','Hitbox','Keyboard'];
-	var curSelected:Int = 0;
+	var controlitems:Array<String> = ['Pad-Right','Pad-Left','Pad-Custom','Duo','Hitbox','Keyboard'];
+	var curSelected:Int = 4;
 	var buttonistouched:Bool = false;
 	var bindbutton:FlxButton;
 	var config:Config;
-	var leavebutton:FlxButton;
 
 	override public function create():Void
 	{
@@ -44,18 +45,7 @@ class AndroidControlsMenu extends MusicBeatState
 		bg.antialiasing = ClientPrefs.globalAntialiasing;
 		add(bg);
 
-		#if android
 		var titleText:Alphabet = new Alphabet(75, 60, "Android Controls", true);
-		#end
-		
-		#if ios
-		var titleText:Alphabet = new Alphabet(75, 60, "IOS Controls", true);
-		#end
-		
-		#if windows
-		var titleText:Alphabet = new Alphabet(75, 60, "nobody will see this!", true);
-		#end
-
 		titleText.scaleX = 0.6;
 		titleText.scaleY = 0.6;
 		titleText.alpha = 0.4;
@@ -68,12 +58,16 @@ class AndroidControlsMenu extends MusicBeatState
 		hbox = new FlxHitbox(0.75, ClientPrefs.globalAntialiasing);
 		hbox.visible = false;
 		add(hbox);
+		
+		newhbox = new FlxNewHitbox();
+		newhbox.visible = false;
+		add(newhbox);
 
 		inputvari = new PsychAlphabet(0, 50, controlitems[curSelected], false, false, 0.05, 0.8);
 		inputvari.screenCenter(X);
 		add(inputvari);
 
-		var ui_tex = Paths.getSparrowAtlas('MobileControls/menu/arrows');
+		var ui_tex = Paths.getSparrowAtlas('androidcontrols/menu/arrows');
 
 		leftArrow = new FlxSprite(inputvari.x - 60, inputvari.y + 50);
 		leftArrow.frames = ui_tex;
@@ -109,28 +103,14 @@ class AndroidControlsMenu extends MusicBeatState
 		rightPozition.borderSize = 2.4;
 		add(rightPozition);
 
-		leavebutton = new FlxButton(1100, 620, "Exit", function()
-			{
-				leave();
-			});
-			leavebutton.setGraphicSize(150, 70);
-			leavebutton.updateHitbox();
-			leavebutton.color = FlxColor.GREEN;
-			leavebutton.label.fieldWidth = 135;
-			leavebutton.label.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, CENTER);
-			setAllLabelsOffset(leavebutton, 2, 24);
-			add(leavebutton);
+		var tipText:FlxText = new FlxText(10, FlxG.height - 24, 0, 'Press BACK to Go Back to Options Menu', 16);
+		tipText.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		tipText.borderSize = 2;
+		tipText.scrollFactor.set();
+		add(tipText);
 
 		changeSelection();
 	}
-
-	function setAllLabelsOffset(button:FlxButton, x:Float, y:Float)
-		{
-			for (point in button.labelOffsets)
-			{
-				point.set(x, y);
-			}
-		}
 
 	override function update(elapsed:Float)
 	{
@@ -152,15 +132,16 @@ class AndroidControlsMenu extends MusicBeatState
 			trackbutton(touch);
 		}
 		
-	}
-
-	function leave():Void
+		#if android
+		if (FlxG.android.justReleased.BACK)
 		{
 			save();
 			FlxTransitionableState.skipNextTransIn = true;
 			FlxTransitionableState.skipNextTransOut = true;
 			MusicBeatState.switchState(new options.OptionsState());
 		}
+		#end
+	}
 
 	function changeSelection(change:Int = 0)
 	{
@@ -204,10 +185,15 @@ class AndroidControlsMenu extends MusicBeatState
 		if (daChoice != "Hitbox")
 		{
 			hbox.visible = false;
+			newhbox.visible = false;
 		}
 		else
 		{
+		if(ClientPrefs.hitboxmode != 'New'){
 			hbox.visible = true;
+		     }else{
+		       newhbox.visible = true;
+		     }
 		}
 
 		if (daChoice != "Pad-Custom")
