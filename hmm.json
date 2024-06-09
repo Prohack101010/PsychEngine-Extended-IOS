@@ -4,7 +4,7 @@
             "name":"lime",
             "type": "git",
             "ref": "main",
-            "url": "https://github.com/PsychPorting/lime-0.6.3.git"
+            "url": "https://github.com/Prohack101010/mylime.git"
         },
 		{
 			"name":"openfl",
@@ -65,7 +65,6 @@
 		{
 			"name":"extension-androidtools",
 			"type":"git",
-			"dir":"extension-androidtools",
 			"ref":"main",
 			"url":"https://github.com/MaysLastPlay77/extension-androidtools.git"
 		}
